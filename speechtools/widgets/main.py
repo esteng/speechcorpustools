@@ -7,7 +7,13 @@ from ..plot import SCTSummaryWidget
 
 from ..workers import (DiscourseQueryWorker)
 
-from .base import DataListWidget, CollapsibleWidgetPair, DetailedMessageBox, CollapsibleTabWidget
+from .base import DataListWidget, DetailedMessageBox, CollapsibleTabWidget
+
+from .enrich import EnrichmentSummaryWidget
+
+from .inventory import InventoryWidget
+
+from .lexicon import LexiconWidget
 
 from .selectable_audio import SelectableAudioWidget
 
@@ -53,31 +59,22 @@ class DiscourseWidget(QtWidgets.QWidget):
             self.discourseList.clear()
 
 class ViewWidget(CollapsibleTabWidget):
-    
+
     changingDiscourse = QtCore.pyqtSignal()
     connectionIssues = QtCore.pyqtSignal()
     def __init__(self, parent = None):
         super(ViewWidget, self).__init__(parent)
-   
+
         self.discourseWidget = SelectableAudioWidget()
 
-        self.summaryWidget = SCTSummaryWidget(self)
+        self.summaryWidget = EnrichmentSummaryWidget()
 
-        self.dataTabs = QtWidgets.QTabWidget()
-
-        self.phoneList = DataListWidget(self.summaryWidget, 'p')
-        self.phoneList.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-
-        self.wordList = DataListWidget(self.summaryWidget, 'w')
-        self.wordList.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-
-        self.dataTabs.addTab(self.phoneList, 'Phones')
-        self.dataTabs.addTab(self.wordList, 'Words')
-
-        summaryTab = CollapsibleWidgetPair(QtCore.Qt.Horizontal, self.summaryWidget.native, self.dataTabs)
-
-        self.addTab(self.discourseWidget, 'Discourse')
-        #self.addTab(summaryTab, 'Summary')
+        self.lexiconWidget = LexiconWidget()
+        self.inventoryWidget = InventoryWidget()
+        self.addTab(self.summaryWidget, 'Corpus summary')
+        self.addTab(self.discourseWidget, 'View discourse')
+        self.addTab(self.lexiconWidget, 'Corpus lexicon')
+        self.addTab(self.inventoryWidget, 'Corpus inventory')
 
         self.worker = DiscourseQueryWorker()
         self.worker.dataReady.connect(self.discourseWidget.updateDiscourseModel)
@@ -112,6 +109,7 @@ class ViewWidget(CollapsibleTabWidget):
         self.config = config
         self.changingDiscourse.emit()
         self.discourseWidget.config = config
+        self.summaryWidget.updateConfig(config)
         if self.config is None:
             return
         if self.config.corpus_name:
