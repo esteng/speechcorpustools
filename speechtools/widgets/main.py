@@ -9,7 +9,7 @@ from ..workers import (DiscourseQueryWorker)
 
 from .base import DataListWidget, DetailedMessageBox, CollapsibleTabWidget
 
-from .enrich import EnrichmentSummaryWidget
+from .enrich import EnrichmentSummaryWidget, ExtraEnrichmentWidget
 
 from .inventory import InventoryWidget
 
@@ -69,9 +69,18 @@ class ViewWidget(CollapsibleTabWidget):
 
         self.summaryWidget = EnrichmentSummaryWidget()
 
+        self.extraWidget = ExtraEnrichmentWidget()
+
+        self.comboWidget = QtWidgets.QWidget()
+
+        self.comboLayout = QtWidgets.QGridLayout()
+        self.comboLayout.addWidget(self.summaryWidget, 0, 0)
+        self.comboLayout.addWidget(self.extraWidget, 0, 1)
+        self.comboWidget.setLayout(self.comboLayout)
+
         self.lexiconWidget = LexiconWidget()
         self.inventoryWidget = InventoryWidget()
-        self.addTab(self.summaryWidget, 'Corpus summary')
+        self.addTab(self.comboWidget, 'Corpus summary')
         self.addTab(self.discourseWidget, 'View discourse')
         self.addTab(self.lexiconWidget, 'Corpus lexicon')
         self.addTab(self.inventoryWidget, 'Corpus inventory')
@@ -80,6 +89,7 @@ class ViewWidget(CollapsibleTabWidget):
         self.worker.dataReady.connect(self.discourseWidget.updateDiscourseModel)
         self.changingDiscourse.connect(self.worker.stop)
         self.changingDiscourse.connect(self.discourseWidget.clearDiscourse)
+        self.changingDiscourse.connect(self.summaryWidget.resetPercent)
         self.worker.errorEncountered.connect(self.showError)
         self.worker.connectionIssues.connect(self.connectionIssues.emit)
 
@@ -109,7 +119,8 @@ class ViewWidget(CollapsibleTabWidget):
         self.config = config
         self.changingDiscourse.emit()
         self.discourseWidget.config = config
-        self.summaryWidget.updateConfig(config)
+        self.summaryWidget.updateConfig(self.config)
+        self.extraWidget.updateConfig(self.config)
         if self.config is None:
             return
         if self.config.corpus_name:

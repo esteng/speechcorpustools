@@ -56,6 +56,9 @@ class LeftPane(Pane):
         super(LeftPane, self).__init__()
 
         self.viewWidget = ViewWidget()
+
+
+
         self.queryWidget = QueryWidget()
         self.queryWidget.needsShrinking.connect(self.growLower)
         self.viewWidget.needsShrinking.connect(self.growUpper)
@@ -152,6 +155,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.leftPane.viewWidget.discourseWidget.markedAsAnnotated.connect(self.leftPane.queryWidget.markAnnotated)
         self.leftPane.viewWidget.discourseWidget.selectionChanged.connect(self.rightPane.detailsWidget.showDetails)
         self.leftPane.viewWidget.discourseWidget.acousticsSelected.connect(self.rightPane.acousticsWidget.showDetails)
+        self.leftPane.viewWidget.summaryWidget.toEncode.connect(self.chooseEnrichment)
+        self.leftPane.viewWidget.extraWidget.toEncode.connect(self.chooseEnrichment)
+
         self.mainWidget = CollapsibleWidgetPair(QtCore.Qt.Horizontal, self.leftPane,self.rightPane)
         self.leftPane.queryWidget.needsHelp.connect(self.rightPane.helpWidget.getHelpInfo)
         self.leftPane.queryWidget.queryForm.queryToRun.connect(self.runQuery)
@@ -468,6 +474,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 self,
                 statusTip="getHelp", triggered = self.getEnrichHelp) #, triggered=self.encodeUtterances
         self.enrichHelpAct.setEnabled(True)
+
+
+
     def createMenus(self):
 
         self.corpusMenu = self.menuBar().addMenu("Corpus")
@@ -499,6 +508,31 @@ class MainWindow(QtWidgets.QMainWindow):
     def exportCorpus(self):
         pass
 
+    def chooseEnrichment(self, string):
+        if string == 'pause':
+            self.encodePauses()
+        elif string == 'utterances':
+            self.encodeUtterances()
+        elif string == 'syllabics':
+            self.encodeSyllabics()
+        elif string == 'syllables':
+            self.encodeSyllables()
+        elif string == 'lexical':
+            self.enrichLexicon()
+        elif string == 'phonological':
+            self.enrichFeatures()
+        elif string == 'stress/tone':
+            self.encodeStress()
+        elif string == 'subset':
+            self.encodePhoneSubset()
+        elif string == 'hierarchical':
+            self.encodeHierarchicalProperties()
+        elif string == 'speaker':
+            self.enrichSpeakers()
+        elif string == 'relativized':
+            self.encodeRelativizedMeasures()
+        elif string == 'acoustics':
+            self.analyzeAcoustics()
     def enrichLexicon(self):
         dialog = EnrichLexiconDialog(self.corpusConfig, self)
         if dialog.exec_() == QtWidgets.QDialog.Accepted:

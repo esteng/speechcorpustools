@@ -347,65 +347,86 @@ class EncodeLabel(QtWidgets.QWidget):
     def __init__(self, annotation_type, parent = None):
         super(EncodeLabel, self).__init__(parent)
 
+        self.optionsDict = {'non-speech element':( lambda : self.toEncode.emit('pause')),
+                            'utterance': (lambda: self.toEncode.emit('utterances')),
+                            'syllabic': (lambda : self.toEncode.emit('syllabics')), 
+                            'syllable': (lambda : self.toEncode.emit('syllables')),
+                            'hierarchical': (lambda: self.toEncode.emit('hierarchical')),
+                            'lexicon' : (lambda: self.toEncode.emit('lexical')),
+                            'phonological inventory' : (lambda : self.toEncode.emit('phonological')),
+                            'speakers' : (lambda: self.toEncode.emit('speaker')),
+                            'subset': (lambda: self.toEncode.emit('subset')),
+                            'stress/tone' : (lambda: self.toEncode.emit('stress/tone')),
+                            'relativized' : (lambda: self.toEncode.emit('relativized')),
+                            'acoustics' : (lambda: self.toEncode.emit('acoustics'))}
+                            
+
         self.annotation_type = annotation_type
 
         layout = QtWidgets.QVBoxLayout()
 
-        self.label = QtWidgets.QLabel(self.annotation_type.title() + 's')
-        layout.addWidget(self.label)
+        #self.label = QtWidgets.QLabel(self.annotation_type.title() + 's') 
+        #layout.addWidget(self.label)
 
-        self.enrichButton = QtWidgets.QToolButton()
-        self.enrichButton.setText('Enrich')
-        self.enrichButton.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        #self.enrichButton = QtWidgets.QToolButton()
+        self.enrichButton = QtWidgets.QPushButton()
+        self.enrichButton.setText('Encode \n{}'.format(self.annotation_type))
+        if self.annotation_type in ['non-speech element', 'utterance', 'syllable']:
+            self.enrichButton.setText((self.enrichButton.text()+'s').replace('non-speech elements','pauses'))
+        if self.annotation_type == 'relativized':
+            self.enrichButton.setText('Encode \nrelativized measures')
+        if self.annotation_type in ['lexicon', 'phonological inventory', 'speakers']:
+            self.enrichButton.setText('Enrich \n{}'.format(self.annotation_type))
+        if self.annotation_type == 'subset':
+            self.enrichButton.setText('Encode \nphone subsets (classes)')
+        if self.annotation_type == 'syllabic':
+            self.enrichButton.setText('Encode \nsyllabic segs')
+        if self.annotation_type == 'hierarchical':
+            self.enrichButton.setText('Encode \nhierarchical properties')
+        self.enrichButton.setSizePolicy(QtWidgets.QSizePolicy.Fixed,QtWidgets.QSizePolicy.Fixed)
+        #self.enrichButton.setPopupMode(QtWidgets.QToolButton.InstantPopup)
 
-        self.enrichButton.setEnabled(False)
-
+        self.enrichButton.setEnabled(True)
+        self.enrichButton.clicked.connect(self.optionsDict[self.annotation_type])
         #self.encodeButton.clicked.connect(self.toEncode.emit)
 
         layout.addWidget(self.enrichButton)
 
         self.setLayout(layout)
 
-
-    def updateEnrichMenu(self, config):
-        menu = QtWidgets.QMenu()
+    def updateOptions(self, config):
         if config is not None:
             self.enrichButton.setEnabled(True)
             with CorpusContext(config) as c:
                 if self.annotation_type == 'non-speech element':
                     t = 'Encode non-speech elements'
-                    if c.hierarchy.has_token_subset(c.word_name, 'pause'):
-                        t = 'Re-encode non-speech elements'
-                    pauseAction = QtWidgets.QAction(t, self)
-                    pauseAction.triggered.connect(lambda : self.toEncode.emit('pause'))
-                    menu.addAction(pauseAction)
+                    if c.hierarchy.has_token_subset(c.word_name, self.annotation_type.replace('non-speech element', 'pause')): #\
+                        #or c.hierarchy.has_token_subset(c.phone_name, self.annotation_type) \
+                        #or c.hierarchy.has_type_subset(c.phone_name, self.annotation_type):
+                        self.enrichButton.setStyleSheet('background-color: rgb(0,250,154)') #color part
                 elif self.annotation_type not in [c.phone_name, c.word_name]:
-                    t = 'Encode'
-                    if self.annotation_type in c.hierarchy.annotation_types:
-                        t = 'Re-encode'
-                    encodeAction = QtWidgets.QAction(t, self)
-                    encodeAction.triggered.connect(lambda : self.toEncode.emit(self.annotation_type))
-                    menu.addAction(encodeAction)
-                elif self.annotation_type == c.word_name:
-                    lexiconAction = QtWidgets.QAction('Enrich lexicon', self)
-                    lexiconAction.triggered.connect(lambda : self.toEncode.emit('lexicon'))
-                    menu.addAction(lexiconAction)
+                    if self.annotation_type == 'stress/tone' and \
+                            not c.hierarchy.has_token_subset('syllable','begin'):
+                            print("cuz of stress tone")
+                            self.enrichButton.setEnabled(False)
+                    if self.annotation_type == 'utterance' and \
+                            not c.hierarchy.has_token_subset(c.word_name, 'pause'):
+                            self.enrichButton.setEnabled(False)
+                    if self.annotation_type == 'syllabic' and \
+                            not c.hierarchy.has_token_subset(c.word_name, 'pause'):
+                            self.enrichButton.setEnabled(False)
+                    if self.annotation_type == 'syllable' and \
+                            not c.hierarchy.has_token_subset(c.word_name, 'pause'):
+                            self.enrichButton.setEnabled(False)
+                    if self.annotation_type == 'syllable' and \
+                            not c.hierarchy.has_type_subset(c.phone_name, 'syllabic'):
+                            self.enrichButton.setEnabled(False)
                 else:
-                    t = 'Encode syllabic segments'
-                    if c.hierarchy.has_type_subset(c.phone_name, 'syllabic'):
-                        t = 'Re-encode syllabic segments'
-                    syllabicsAction = QtWidgets.QAction(t, self)
-                    syllabicsAction.triggered.connect(lambda : self.toEncode.emit('syllabic'))
-                    menu.addAction(syllabicsAction)
-                    classAction = QtWidgets.QAction('Encode phone subsets (classes)', self)
-                    classAction.triggered.connect(lambda : self.toEncode.emit('class'))
-                    menu.addAction(classAction)
-                    inventoryAction = QtWidgets.QAction('Enrich phonological inventory', self)
-                    inventoryAction.triggered.connect(lambda : self.toEncode.emit('inventory'))
-                    menu.addAction(inventoryAction)
+                    self.enrichButton.setEnabled(True)
         else:
+            print("cuz config is none")
             self.enrichButton.setEnabled(False)
-        self.enrichButton.setMenu(menu)
+
 
 
 class PropertySummaryWidget(QtWidgets.QWidget):
@@ -461,6 +482,7 @@ class AnnotationSummaryWidget(QtWidgets.QWidget):
 
 
 class EnrichmentWidget(QtWidgets.QWidget):
+    toEncode = QtCore.pyqtSignal(str)
     def __init__(self, annotation_type, parent = None):
         super(EnrichmentWidget, self).__init__(parent)
         self.annotation_type = annotation_type
@@ -469,32 +491,28 @@ class EnrichmentWidget(QtWidgets.QWidget):
 
         self.label = EncodeLabel(self.annotation_type)
 
-        self.summary = AnnotationSummaryWidget(self.annotation_type)
+        self.label.toEncode.connect(self.toEncode.emit)
+        #self.summary = AnnotationSummaryWidget(self.annotation_type)
 
         layout.addWidget(self.label)
 
-        layout.addWidget(self.summary)
+        #layout.addWidget(self.summary)
 
         self.setLayout(layout)
 
     def updateConfig(self, config):
-        self.summary.updateConfig(config)
-        self.label.updateEnrichMenu(config)
+        self.label.updateOptions(config)
 
-class PauseWidget(EnrichmentWidget):
+class ExtraEnrichmentWidget(BaseSummaryWidget):
+    toEncode = QtCore.pyqtSignal(str)
     def __init__(self, parent = None):
-        super(PauseWidget, self).__init__('non-speech element', parent)
-
-class EnrichmentSummaryWidget(BaseSummaryWidget):
-    def __init__(self, parent = None):
-        super(EnrichmentSummaryWidget, self).__init__(parent)
-
-
+        super(ExtraEnrichmentWidget,self).__init__(parent)
         layout = QtWidgets.QVBoxLayout()
-        self.mainLayout = QtWidgets.QVBoxLayout()
+        self.mainLayout = QtWidgets.QGridLayout()
         self.mainLayout.setSpacing(0)
         self.mainLayout.setContentsMargins(0,0,0,0)
         self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
+
         mainWidget = QtWidgets.QWidget()
 
         mainWidget.setSizePolicy(QtWidgets.QSizePolicy.Preferred,QtWidgets.QSizePolicy.Preferred)
@@ -509,18 +527,167 @@ class EnrichmentSummaryWidget(BaseSummaryWidget):
         scroll.setSizePolicy(policy)
         layout.addWidget(scroll)
 
-        self.pauseWidget = PauseWidget()
+        lexical = EnrichmentWidget('lexicon')
+        lexlab = QtWidgets.QLabel()
+        lexlab.setText('Lexical properties:')
+        lexical.toEncode.connect(self.toEncode.emit) 
 
-        self.mainLayout.addWidget(self.pauseWidget)
+        self.mainLayout.addWidget(lexlab, 0,0,  QtCore.Qt.AlignCenter)
+        self.mainLayout.addWidget(lexical, 1, 0, QtCore.Qt.AlignCenter)
 
-        for k in ['utterance', 'word', 'syllable', 'phone']:
-            self.mainLayout.addWidget(EnrichmentWidget(k))
+        phonlab = QtWidgets.QLabel()
+        phonlab.setText('Phonological properties:')
+        phon = EnrichmentWidget('phonological inventory')
+        classes = EnrichmentWidget('subset')
+        phon.toEncode.connect(self.toEncode.emit) 
+        classes.toEncode.connect(self.toEncode.emit) 
+
+        self.mainLayout.addWidget(phonlab, 2,0, QtCore.Qt.AlignCenter)
+        self.mainLayout.addWidget(phon, 3, 0, QtCore.Qt.AlignCenter)
+        self.mainLayout.addWidget(classes, 4, 0, QtCore.Qt.AlignCenter)
+
+        syllab = QtWidgets.QLabel()
+        syllab.setText('Syllabic properties:')
+        stress = EnrichmentWidget('stress/tone')
+        stress.toEncode.connect(self.toEncode.emit) 
+
+        self.mainLayout.addWidget(syllab, 5, 0, QtCore.Qt.AlignCenter)
+        self.mainLayout.addWidget(stress, 6,0, QtCore.Qt.AlignCenter)
+
+        otherlab = QtWidgets.QLabel()
+        otherlab.setText('Combined properties:')
+        hierarchical = EnrichmentWidget('hierarchical')
+        relativized = EnrichmentWidget('relativized')
+        speaker = EnrichmentWidget('speakers')
+        hierarchical.toEncode.connect(self.toEncode.emit) 
+        relativized.toEncode.connect(self.toEncode.emit) 
+        speaker.toEncode.connect(self.toEncode.emit) 
+
+        self.mainLayout.addWidget(otherlab,7,0, QtCore.Qt.AlignCenter)
+        self.mainLayout.addWidget(hierarchical,8,0, QtCore.Qt.AlignCenter)
+        self.mainLayout.addWidget(relativized,9,0, QtCore.Qt.AlignCenter)
+        self.mainLayout.addWidget(speaker,10,0, QtCore.Qt.AlignCenter)
 
         self.setLayout(layout)
 
+        self.refresh()
+
     def refresh(self):
+        print("refreshing extrawidget")
         for i in range(self.mainLayout.count()):
-            self.mainLayout.itemAt(i).widget().updateConfig(self.config)
+            if not isinstance(self.mainLayout.itemAt(i).widget(), QtWidgets.QLabel):
+                self.mainLayout.itemAt(i).widget().updateConfig(self.config)
+            
+
+        
+class EnrichmentSummaryWidget(BaseSummaryWidget):
+    toEncode = QtCore.pyqtSignal(str)
+    def __init__(self, parent = None):
+        super(EnrichmentSummaryWidget, self).__init__(parent)
+
+
+        layout = QtWidgets.QVBoxLayout()
+        self.mainLayout = QtWidgets.QGridLayout()
+        self.mainLayout.setSpacing(0)
+        #self.mainLayout.setContentsMargins(0,0,0,0)
+        #self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
+
+        mainWidget = QtWidgets.QWidget()
+
+        mainWidget.setSizePolicy(QtWidgets.QSizePolicy.Fixed,QtWidgets.QSizePolicy.Fixed)
+        mainWidget.setLayout(self.mainLayout)
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(mainWidget)
+        scroll.setMinimumHeight(10)
+        scroll.setSizePolicy(QtWidgets.QSizePolicy.Fixed,QtWidgets.QSizePolicy.Fixed)
+        policy = scroll.sizePolicy()
+        policy.setVerticalStretch(1)
+        scroll.setSizePolicy(policy)
+        layout.addWidget(scroll)
+
+        self.percentLabel = QtWidgets.QLabel()
+
+        self.percentInt = 0
+
+        self.syllabic, self.syllable, self.pause, self.utterance = False, False, False, False
+        
+        self.percentLabel.setText("{}% Enriched".format(self.percentInt))
+
+
+
+        #for k in ['utterance', 'word', 'syllable', 'phone']:
+        #    self.mainLayout.addWidget(EnrichmentWidget(k))
+
+        pauseWidget = EnrichmentWidget('non-speech element')
+        utteranceEnrich = EnrichmentWidget('utterance')
+        syllabicEnrich = EnrichmentWidget('syllabic')
+        syllableEnrich = EnrichmentWidget('syllable')
+        acousticsEncode = EnrichmentWidget('acoustics')
+
+        pauseWidget.toEncode.connect(self.toEncode.emit)
+        utteranceEnrich.toEncode.connect(self.toEncode.emit)
+        syllabicEnrich.toEncode.connect(self.toEncode.emit)
+        syllableEnrich.toEncode.connect(self.toEncode.emit) 
+        acousticsEncode.toEncode.connect(self.toEncode.emit)
+
+        layout0 = QtWidgets.QVBoxLayout()
+        #line = QtCore.QLine(0,0,0,-1)
+
+        painter = QtGui.QPainter()
+        painter.drawLine(0,0,10,10)
+        
+        layout0.addWidget(pauseWidget)
+
+        view = QtWidgets.QGraphicsView()
+        scene = QtWidgets.QGraphicsScene()
+        line = QtWidgets.QGraphicsLineItem(0,0,0,-10)
+
+        scene.addItem(line)
+        view.setScene(scene)
+
+        #self.mainLayout.addWidget(view,0,0)
+        self.mainLayout.addWidget(pauseWidget, 0, 1)        
+        self.mainLayout.addWidget(utteranceEnrich , 1, 0)
+
+        self.mainLayout.addWidget(syllabicEnrich,1, 2)
+        self.mainLayout.addWidget(syllableEnrich,2,2)
+        self.mainLayout.addWidget(self.percentLabel, 0,2)
+        self.mainLayout.addWidget(acousticsEncode, 2,0)
+        
+        self.setLayout(layout)
+
+    def refresh(self):
+
+        for i in range(self.mainLayout.count()):
+            if not isinstance(self.mainLayout.itemAt(i).widget(), QtWidgets.QLabel) and not isinstance(self.mainLayout.itemAt(i).widget(), QtWidgets.QGraphicsView):
+                self.mainLayout.itemAt(i).widget().updateConfig(self.config)
+            
+            if self.config is not None:
+                with CorpusContext(self.config) as c:
+                    if c.hierarchy.has_type_subset(c.phone_name, 'syllabic') and not self.syllabic:
+                        print("added 25 for syllabic")
+                        self.percentInt +=25
+                        self.syllabic = True
+                    if c.hierarchy.has_token_subset(c.word_name, 'pause') and not self.pause:
+                        print("added 25 for pause")
+                        self.percentInt +=25
+                        self.pause = True
+                    if c.hierarchy.has_token_property('utterance', 'begin') and not self.utterance:
+                        print("added 25 for utterance")
+                        self.percentInt +=25
+                        self.utterance = True
+                    if c.hierarchy.has_token_property('syllable','begin') and not self.syllable:
+                        print("added 25 for syllable")
+                        self.percentInt +=25
+                        self.syllable = True
+        self.percentLabel.setText("{}% Enriched".format(self.percentInt))
+
+    def resetPercent(self):
+        self.percentInt = 0
+        self.percentLabel.setText("0% Enriched")
+        self.syllabic, self.syllable, self.pause, self.utterance = False, False, False, False
+
 
 class EncodeStressDialog(BaseDialog):
     def __init__(self, config, parent):
@@ -672,11 +839,11 @@ class EnrichSpeakersDialog(BaseDialog):
         layout = QtWidgets.QFormLayout()
         self.layout().insertLayout(0, layout)
 
-        self.setWindowTitle('Enrich phones with features')
+        self.setWindowTitle('Enrich speakers from file')
         self.path = None
 
     def accept(self):
-        self.path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select feature file", filter = "CSV (*.txt  *.csv)")
+        self.path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select speaker file", filter = "CSV (*.txt  *.csv)")
         if not self.path:
             return
         QtWidgets.QDialog.accept(self)
@@ -685,31 +852,4 @@ class EnrichSpeakersDialog(BaseDialog):
         return self.path   
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-=======
-        return self.path
->>>>>>> e73f4c5391f1e29571aa5ac0fc0be45de7cbfdbb
 
