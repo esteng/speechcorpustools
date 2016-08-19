@@ -9,7 +9,7 @@ from ..workers import (DiscourseQueryWorker)
 
 from .base import DataListWidget, DetailedMessageBox, CollapsibleTabWidget
 
-from .enrich import EnrichmentSummaryWidget, ExtraEnrichmentWidget
+from .enrich import EnrichmentSummaryWidget, ExtraEnrichmentWidget, AnnotationSummaryWidget
 
 from .inventory import InventoryWidget
 
@@ -73,6 +73,8 @@ class ViewWidget(CollapsibleTabWidget):
 
         self.comboWidget = QtWidgets.QWidget()
 
+        self.annSummaryWidget = AnnotationSummaryWidget()
+
         self.comboLayout = QtWidgets.QGridLayout()
         self.comboLayout.addWidget(self.summaryWidget, 0, 0)
         self.comboLayout.addWidget(self.extraWidget, 0, 1)
@@ -80,16 +82,19 @@ class ViewWidget(CollapsibleTabWidget):
 
         self.lexiconWidget = LexiconWidget()
         self.inventoryWidget = InventoryWidget()
-        self.addTab(self.comboWidget, 'Corpus summary')
+        self.addTab(self.comboWidget, 'Enrichment')
+        
+        #self.addTab(self.lexiconWidget, 'Corpus lexicon')
+        #self.addTab(self.inventoryWidget, 'Corpus inventory')
+        self.addTab(self.annSummaryWidget, 'Corpus Summary')
         self.addTab(self.discourseWidget, 'View discourse')
-        self.addTab(self.lexiconWidget, 'Corpus lexicon')
-        self.addTab(self.inventoryWidget, 'Corpus inventory')
-
+        
         self.worker = DiscourseQueryWorker()
         self.worker.dataReady.connect(self.discourseWidget.updateDiscourseModel)
         self.changingDiscourse.connect(self.worker.stop)
         self.changingDiscourse.connect(self.discourseWidget.clearDiscourse)
         self.changingDiscourse.connect(self.summaryWidget.resetPercent)
+        #self.changingDiscourse.connect(self.extraWidget.init_buttons)
         self.worker.errorEncountered.connect(self.showError)
         self.worker.connectionIssues.connect(self.connectionIssues.emit)
 
@@ -121,10 +126,10 @@ class ViewWidget(CollapsibleTabWidget):
         self.discourseWidget.config = config
         self.summaryWidget.updateConfig(self.config)
         self.extraWidget.updateConfig(self.config)
+        self.annSummaryWidget.updateConfig(self.config)
         if self.config is None:
             return
         if self.config.corpus_name:
             with CorpusContext(self.config) as c:
                 if c.hierarchy != self.discourseWidget.hierarchy:
                     self.discourseWidget.updateHierachy(c.hierarchy)
-

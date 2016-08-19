@@ -219,7 +219,7 @@ class AcousticAnalysisWorker(QueryWorker):
                             call_back = self.kwargs['call_back'],
                             acoustics = acoustics)
 
-            self.actionCompleted.emit('analysing acousics')
+            self.actionCompleted.emit('analysing acoustics')
         return True
 
 class PauseEncodingWorker(QueryWorker):
