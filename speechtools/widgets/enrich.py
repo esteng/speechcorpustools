@@ -366,6 +366,7 @@ class EncodeLabel(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
     
         self.enrichButton.setEnabled(True)
+
         self.enrichButton.clicked.connect(self.optionsDict[self.annotation_type])
 
 
@@ -399,7 +400,6 @@ class EncodeLabel(QtWidgets.QWidget):
             self.enrichButton.setStyleSheet('background-color: None')
             with CorpusContext(config) as c:
                 word = False
-                #print(c.hierarchy.annotation_types)
                 try:
                     word = getattr(c, c.word_name)
                 except:
@@ -441,6 +441,7 @@ class EncodeLabel(QtWidgets.QWidget):
                             self.resetFeatures(True)
                 else:
                     self.enrichButton.setEnabled(True)
+
         else:
             self.enrichButton.setEnabled(False)
             self.enrichButton.setStyleSheet('background-color: None')
@@ -448,6 +449,7 @@ class EncodeLabel(QtWidgets.QWidget):
     def resetFeatures(self, pause = False):
         if pause:
             self.enrichButton.setEnabled(True)
+
         else:
             self.enrichButton.setEnabled(False)
         self.enrichButton.setStyleSheet('background-color: None')

@@ -1,6 +1,7 @@
 import pytest
 from PyQt5 import QtCore, QtWidgets
 from speechtools.widgets.query.basic import ValueWidget
+from speechtools.widgets.main import ViewWidget
 from polyglotdb import CorpusContext
 import collections
 
@@ -31,3 +32,17 @@ def test_enrich_relativized(acoustic_config, qtbot):
 	query.changeType('word','median_duration',float)
 
 	assert(isinstance(query.valueWidget,QtWidgets.QLineEdit))
+
+def test_enrichment_view(stressed_config, qtbot):
+
+	view = ViewWidget()
+	summary = view.summaryWidget
+	qtbot.addWidget(summary)
+
+
+
+	assert(isinstance(summary.mainLayout.itemAt(1).widget().label.enrichButton, QtWidgets.QPushButton))
+
+	view.updateConfig(stressed_config)
+	assert(summary.mainLayout.itemAt(0).widget().label.enrichButton.isEnabled()==True)
+	assert(summary.mainLayout.itemAt(1).widget().label.enrichButton.isEnabled()==False)
