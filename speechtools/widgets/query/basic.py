@@ -331,6 +331,7 @@ class ValueWidget(QtWidgets.QWidget):
                     self.ann_type = bool
 
 
+
                 else:
                     self.valueWidget = NonScrollingComboBox()
                     for l in self.levels:

@@ -1,6 +1,8 @@
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 
+from .base import BaseSummaryWidget
+
 class RegexWidget(QtWidgets.QWidget):
     def __init__(self, config, parent = None):
         super(RegexWidget, self).__init__(parent)
@@ -34,13 +36,16 @@ class WordSelectWidget(QtWidgets.QWidget):
     def value(self):
         return self.regexWidget.value()
 
+class LexiconWidget(BaseSummaryWidget):
+    pass
+
 
 class StressToneSelectWidget(QtWidgets.QWidget):
     def __init__(self,config,parent=None):
         super(StressToneSelectWidget, self).__init__(parent)
-        
+
         layout = QtWidgets.QFormLayout()
-   
+
         rowLayout = QtWidgets.QHBoxLayout()
         vlayout1 = QtWidgets.QVBoxLayout()
         vlayout2 = QtWidgets.QVBoxLayout()
@@ -53,15 +58,15 @@ class StressToneSelectWidget(QtWidgets.QWidget):
         self.regexWidget = RegexWidget(config)
         self.vowelRegexWidget = RegexWidget(config)
         self.vowelRegexWidget.testButton.setParent(None)
-        
+
         vlayout1.addWidget(vowelLabel)
         vlayout1.addWidget(self.vowelRegexWidget)
         vlayout2.addWidget(regexLabel)
         vlayout2.addWidget(self.regexWidget)
-        
+
         rowLayout.addLayout(vlayout1)
         rowLayout.addLayout(vlayout2)
-    
+
         layout.addRow(rowLayout)
 
         self.setLayout(layout)

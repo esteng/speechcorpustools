@@ -65,13 +65,24 @@ class HelpWidget(QtWidgets.QWidget):
         self.layout.addWidget(self.scroll)
         self.layout.setCurrentIndex(self.layout.currentIndex()+1)
 
-        
-
     def getEnrichHelp(self):
+        self.scroll = QtWidgets.QScrollArea()
+
+        infoString = "These enrichments are to be completed once, and are structural in nature.\nTo begin, pauses (non-speech elements) must be encoded. \nThis will enable syllabic and utterance encoding, which will unlock the final two enrichments.\n Details on enrichments available: \n\nEncode non-speech elements: this allows the user to specify for a given database what should not count as speech\n\nEncode utterances: After encoding non-speech elements, we can use them to define utterances (segments of speech separated by a .15-.5 second pause)\nEncode syllabic segments: This allows the user to specify which segments in the corpus are  counted as syllabic\n\nEncode syllables: if the user has encoded syllabic segments, syllables can now be encoded using maximum attested onset\n\nAnalyze acoustics: This will encode pitch and formants into the corpus. This is necessary to view the waveforms and spectrogram."
+
+        self.information = QtWidgets.QLabel(infoString)
+        self.information.setWordWrap(True)
+
+        self.scroll.setWidget(self.information)
+        self.layout.addWidget(self.scroll)
+        self.layout.setCurrentIndex(self.layout.currentIndex()+1)
+
+    def getExtraEnrichHelp(self):
 
         self.scroll = QtWidgets.QScrollArea()
 
-        infoString = "Encode non-speech elements: this allows the user to specify for a given database what should not count as speech\n\nEncode utterances: After encoding non-speech elements, we can use them to define utterances (segments of speech separated by a .15-.5 second pause)\nEncode syllabic segments: This allows the user to specify which segments in the corpus are  counted as syllabic\n\nEncode syllables: if the user has encoded syllabic segments, syllables can now be encoded using maximum attested onset\n\nEncode hierarchical properties: These allow the user to encode such properties as number of syllables in each utterance, or rate of syllables per second\n\nEnrich lexicon: This allows the user to assign certain properties to specific words. For example the user might want to encode word frequency. This can be done by having words in one column and corresponding frequencies in the other column of a column-delimited text file.\n\nEnrich phonological inventory: Similar to lexical enrichment, this allows the user to add certain helpful features to phonological properties -- for example, adding 'fricative' to 'manner_of_articulation' for some phones\n\nEnrich speakers: Like phonological and lexial enrichment, this allows the user to add speaker metadata from a CSV such as sex and age.\n\nEncode subsets: Similar to how syllabic phones were encoded into subsets, the user can encode other phones in the corpus into subsets as well\n\nRelativized measures: This allows the user to encode summary statistics such as mean, median, and std. deviation\n\nEncode stress/tone: Certain corpus alphabets will come with stress or tone information embedded in vowel characters. For example, in some CMUdict corpora primary stress on the vowel AA is represented by AA1. This enrichment function allows the user to specify a regular expression to split this information off of the vowel and encode it onto the syllable. The default expressions are for LibriSpeech (stress) and GlobalPhone (tone)\n\nAnalyze acoustics: This will encode pitch and formants into the corpus. This is necessary to view the waveforms and spectrogram."
+
+        infoString = "Encode hierarchical properties: These allow the user to encode such properties as number of syllables in each utterance, or rate of syllables per second\n\nEnrich lexicon: This allows the user to assign certain properties to specific words. For example the user might want to encode word frequency. This can be done by having words in one column and corresponding frequencies in the other column of a column-delimited text file.\n\nEnrich phonological inventory: Similar to lexical enrichment, this allows the user to add certain helpful features to phonological properties -- for example, adding 'fricative' to 'manner_of_articulation' for some phones\n\nEnrich speakers: Like phonological and lexial enrichment, this allows the user to add speaker metadata from a CSV such as sex and age.\n\nEncode subsets: Similar to how syllabic phones were encoded into subsets, the user can encode other phones in the corpus into subsets as well\n\nRelativized measures: This allows the user to encode summary statistics such as mean, median, and std. deviation\n\nEncode stress/tone: Certain corpus alphabets will come with stress or tone information embedded in vowel characters. For example, in some CMUdict corpora primary stress on the vowel AA is represented by AA1. This enrichment function allows the user to specify a regular expression to split this information off of the vowel and encode it onto the syllable. The default expressions are for LibriSpeech (stress) and GlobalPhone (tone)"
         self.information = QtWidgets.QLabel(infoString)
         self.information.setWordWrap(True)
 

@@ -56,6 +56,9 @@ class LeftPane(Pane):
         super(LeftPane, self).__init__()
 
         self.viewWidget = ViewWidget()
+
+
+
         self.queryWidget = QueryWidget()
         self.queryWidget.needsShrinking.connect(self.growLower)
         self.viewWidget.needsShrinking.connect(self.growUpper)
@@ -152,10 +155,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.leftPane.viewWidget.discourseWidget.markedAsAnnotated.connect(self.leftPane.queryWidget.markAnnotated)
         self.leftPane.viewWidget.discourseWidget.selectionChanged.connect(self.rightPane.detailsWidget.showDetails)
         self.leftPane.viewWidget.discourseWidget.acousticsSelected.connect(self.rightPane.acousticsWidget.showDetails)
+        self.leftPane.viewWidget.summaryWidget.toEncode.connect(self.chooseEnrichment)
+        self.leftPane.viewWidget.summaryWidget.helpButton.clicked.connect(self.rightPane.helpWidget.getEnrichHelp)
+        self.leftPane.viewWidget.extraWidget.helpButton.clicked.connect(self.rightPane.helpWidget.getExtraEnrichHelp)
+        self.leftPane.viewWidget.extraWidget.toEncode.connect(self.chooseEnrichment)
+
         self.mainWidget = CollapsibleWidgetPair(QtCore.Qt.Horizontal, self.leftPane,self.rightPane)
         self.leftPane.queryWidget.needsHelp.connect(self.rightPane.helpWidget.getHelpInfo)
+        self.leftPane.queryWidget.queryForm.queryToRun.connect(self.runQuery)
+        self.leftPane.queryWidget.queryForm.queryToExport.connect(self.exportQuery)
         self.leftPane.queryWidget.exportHelpBroadcast.connect(self.rightPane.helpPopup.exportHelp)
-        self.enrichHelpBroadcast.connect(self.rightPane.helpWidget.getEnrichHelp)
+
         self.leftPane.viewWidget.discourseWidget.discourseHelpBroadcast.connect(self.rightPane.helpWidget.getDiscourseHelp)
         self.leftPane.queryWidget.queryForm.queryToRun.connect(self.runQuery)
         self.leftPane.queryWidget.queryForm.queryToExport.connect(self.exportQuery)
@@ -171,7 +181,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.connectionStatus = QtWidgets.QLabel()
         self.statusBar().addWidget(self.connectionStatus)
         self.setWindowTitle("Speech Corpus Tools")
-        self.createActions()
+
         self.createMenus()
 
         self.updateStatus()
@@ -240,6 +250,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.enrichSpeakersWorker.errorEncountered.connect(self.showError)
         self.enrichSpeakersWorker.dataReady.connect(self.updateStatus)
 
+
         self.encodeStressWorker = StressEncodingWorker()
         self.encodeStressWorker.errorEncountered.connect(self.showError)
         self.encodeStressWorker.dataReady.connect(self.updateStatus)
@@ -251,7 +262,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.relativizedMeasuresWorker = RelativizedMeasuresWorker()
         self.relativizedMeasuresWorker.errorEncountered.connect(self.showError)
         self.relativizedMeasuresWorker.dataReady.connect(self.updateStatus)
-        
+
         self.rightPane.connectWidget.corporaList.cancelImporter.connect(self.importWorker.stop)
         self.rightPane.connectWidget.corporaList.corpusToImport.connect(self.importCorpus)
         self.progressWidget = ProgressWidget(self)
@@ -304,25 +315,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.updateStatus()
 
     def updateStatus(self):
-        self.encodeHierarchicalPropertiesAct.setEnabled(False)
-        self.enrichLexiconAct.setEnabled(False)
-        self.enrichLexiconAct.setText("Enrich lexicon...")
-        self.enrichFeaturesAct.setEnabled(False)
-        self.enrichFeaturesAct.setText("Enrich phonological inventory...")
-        self.syllabicsAct.setEnabled(False)
-        self.syllabicsAct.setText("Encode syllabic segments...")
-        self.syllablesAct.setEnabled(False)
-        self.syllablesAct.setText("Encode syllables...")
-        self.phoneSubsetAct.setEnabled(False)
-        self.phoneSubsetAct.setText("Encode phone subsets (classes)...")
-        self.pausesAct.setEnabled(False)
-        self.pausesAct.setText("Encode non-speech elements...")
-        self.utterancesAct.setEnabled(False)
-        self.utterancesAct.setText("Encode utterances...")
-        self.speechRateAct.setEnabled(False)
-        self.speechRateAct.setText("Encode speech rate...")
-        self.utterancePositionAct.setEnabled(False)
-        self.utterancePositionAct.setText("Encode position in utterance...")
+        
         if self.corpusConfig is None:
             self.status.setText('No connection')
             size = get_system_font_height()
@@ -332,40 +325,7 @@ class MainWindow(QtWidgets.QMainWindow):
             c_name = self.corpusConfig.corpus_name
             if not c_name:
                 c_name = 'No corpus selected'
-            else:
-                with CorpusContext(self.corpusConfig) as c:
-                    self.pausesAct.setEnabled(True)
-                    self.encodeHierarchicalPropertiesAct.setEnabled(True)
-                    self.enrichLexiconAct.setEnabled(True)
-                    self.enrichFeaturesAct.setEnabled(True)
-                    self.syllabicsAct.setEnabled(True)
-                    self.phoneSubsetAct.setEnabled(True)
-                    if c.hierarchy.has_type_subset(c.phone_name, 'syllabic'):
-                        self.syllabicsAct.setText("Re-encode syllabic segments...")
-                        self.syllablesAct.setEnabled(True)
-                    if 'syllable' in c.hierarchy.annotation_types:
-                        self.syllablesAct.setText("Re-encode syllables...")
-                    if c.hierarchy.has_token_subset(c.word_name, 'pause'):
-                        self.pausesAct.setText("Re-encode non-speech elements...")
-                    if c.hierarchy.has_token_subset(c.word_name, 'pause') and self.corpusConfig.graph_host == 'localhost':
-                        self.utterancesAct.setEnabled(True)
-                    else:
-                        self.utterancesAct.setEnabled(False)
-                    if 'utterance' in c.hierarchy.annotation_types:
-                        self.utterancesAct.setText("Re-encode utterances...")
-                        self.speechRateAct.setEnabled(True)
-                        self.utterancePositionAct.setEnabled(True)
-                    else:
-                        self.speechRateAct.setEnabled(False)
-                        self.utterancePositionAct.setEnabled(False)
-
-                    if c.hierarchy.has_token_property('utterance', 'speech_rate'):
-                        self.speechRateAct.setText("Re-encode speech rate...")
-
-                    if c.hierarchy.has_token_property(c.word_name, 'position_in_utterance'):
-                        self.utterancePositionAct.setText("Re-encode position in utterance...")
-            self.enrichHelpAct.setEnabled(True)
-            self.enrichHelpAct.setText("Help")
+            
             self.status.setText('Connected to {} ({})'.format(self.corpusConfig.graph_hostname, c_name))
             size = get_system_font_height()
             self.connectionStatus.setPixmap(QtWidgets.qApp.style().standardIcon(QtWidgets.QStyle.SP_DialogApplyButton).pixmap(size, size))
@@ -384,112 +344,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 pickle.dump(self.corpusConfig, f)
         super(MainWindow, self).closeEvent(event)
 
-    def createActions(self):
+    
 
-        self.specifyAct = QtWidgets.QAction( "Add phonological features...",
-                self,
-                statusTip="Specify a corpus", triggered=self.specifyCorpus)
-
-        self.exportAct = QtWidgets.QAction( "Export a  corpus...",
-                self,
-                statusTip="Export a corpus", triggered=self.exportCorpus)
-
-        self.encodeHierarchicalPropertiesAct = QtWidgets.QAction( "Encode hierarchical properties...",
-                self,
-                statusTip="Encode properties for annotations based on the hierarchy (rate/count/position of lower annotations within higher annotations",
-                triggered=self.encodeHierarchicalProperties)
-        self.encodeHierarchicalPropertiesAct.setEnabled(False)
-
-        self.enrichLexiconAct = QtWidgets.QAction( "Enrich lexicon...",
-                self,
-                statusTip="Enrich lexicon from a CSV file", triggered=self.enrichLexicon)
-        self.enrichLexiconAct.setEnabled(False)
-
-        self.enrichFeaturesAct = QtWidgets.QAction( "Enrich phonological inventory...",
-                self,
-                statusTip="Enrich inventory from a CSV file with features", triggered=self.enrichFeatures)
-        self.enrichFeaturesAct.setEnabled(False)
-
-        self.syllabicsAct = QtWidgets.QAction( "Encode syllabic segments...",
-                self,
-                statusTip="Encode syllabic segments", triggered=self.encodeSyllabics)
-        self.syllabicsAct.setEnabled(False)
-
-        self.syllablesAct = QtWidgets.QAction( "Encode syllables...",
-                self,
-                statusTip="Encode syllables", triggered=self.encodeSyllables)
-        self.syllablesAct.setEnabled(False)
-
-        self.phoneSubsetAct = QtWidgets.QAction( "Encode phone subsets (classes)...",
-                self,
-                statusTip="Create (natural and unnatural) classes of segments", triggered=self.encodePhoneSubset)
-        self.phoneSubsetAct.setEnabled(False)
-
-        self.pausesAct = QtWidgets.QAction( "Encode non-speech elements...",
-                self,
-                statusTip="Encode pauses based on word labels", triggered=self.encodePauses)
-        self.pausesAct.setEnabled(False)
-
-        self.utterancesAct = QtWidgets.QAction( "Encode utterances...",
-                self,
-                statusTip="Encode utterances for the current corpus using parameters for pause length", triggered=self.encodeUtterances)
-        self.utterancesAct.setEnabled(False)
-
-        self.speechRateAct = QtWidgets.QAction( "Encode speech rate...",
-                self,
-                statusTip="Calculate and save speech rate for utterances based on phone subsets", triggered=self.speechRate)
-        self.speechRateAct.setEnabled(False)
-
-        self.utterancePositionAct = QtWidgets.QAction( "Encode position in utterance...",
-                self,
-                statusTip="Calculate and save each word's position in its utterance", triggered=self.utterancePosition)
-        self.utterancePositionAct.setEnabled(False)
-
-        self.analyzeAcousticsAct = QtWidgets.QAction( "Analyze acoustics...",
-                self,
-                statusTip="Batch analysis of formants and pitch for the current corpus", triggered=self.analyzeAcoustics)
-
-        self.encodeRelativizedMeasuresAct = QtWidgets.QAction("Encode Relativized Measures",
-            self,
-            statusTip="Calculate relatized measures such as mean, standard deviation, baseline duration", triggered=self.encodeRelativizedMeasures)
-        
-        self.encodeStressAct = QtWidgets.QAction("Encode stress/tone", 
-            self,
-            statusTip="just a test", triggered = self.encodeStress)
-
-        self.enrichSpeakersAct = QtWidgets.QAction("Enrich speakers...",
-            self,
-            statusTip="Enrich speakers from a CSV file", triggered=self.enrichSpeakers)
-
-        self.enrichHelpAct = QtWidgets.QAction( "Help",
-                self,
-                statusTip="getHelp", triggered = self.getEnrichHelp) #, triggered=self.encodeUtterances
-        self.enrichHelpAct.setEnabled(True)
     def createMenus(self):
 
         self.corpusMenu = self.menuBar().addMenu("Corpus")
-
-        #self.corpusMenu.addAction(self.specifyAct)
-
-        self.enhancementMenu = self.menuBar().addMenu("Enhance corpus")
-
-        self.enhancementMenu.addAction(self.encodeHierarchicalPropertiesAct)
-        self.enhancementMenu.addAction(self.enrichLexiconAct)
-        self.enhancementMenu.addAction(self.enrichFeaturesAct)
-        self.enhancementMenu.addAction(self.enrichSpeakersAct)
-        self.enhancementMenu.addAction(self.syllabicsAct)
-        self.enhancementMenu.addAction(self.syllablesAct)
-        self.enhancementMenu.addAction(self.phoneSubsetAct)
-        self.enhancementMenu.addAction(self.pausesAct)
-        self.enhancementMenu.addAction(self.utterancesAct)
-        self.enhancementMenu.addAction(self.encodeStressAct)
-        #self.enhancementMenu.addAction(self.speechRateAct)
-        #self.enhancementMenu.addAction(self.utterancePositionAct)
-        self.enhancementMenu.addAction(self.encodeRelativizedMeasuresAct)
-        self.enhancementMenu.addAction(self.analyzeAcousticsAct)
-        
-        self.enhancementMenu.addAction(self.enrichHelpAct)
-
 
     def specifyCorpus(self):
         pass
@@ -497,6 +356,31 @@ class MainWindow(QtWidgets.QMainWindow):
     def exportCorpus(self):
         pass
 
+    def chooseEnrichment(self, string):
+        if string == 'pause':
+            self.encodePauses()
+        elif string == 'utterances':
+            self.encodeUtterances()
+        elif string == 'syllabics':
+            self.encodeSyllabics()
+        elif string == 'syllables':
+            self.encodeSyllables()
+        elif string == 'lexical':
+            self.enrichLexicon()
+        elif string == 'phonological':
+            self.enrichFeatures()
+        elif string == 'stress/tone':
+            self.encodeStress()
+        elif string == 'subset':
+            self.encodePhoneSubset()
+        elif string == 'hierarchical':
+            self.encodeHierarchicalProperties()
+        elif string == 'speaker':
+            self.enrichSpeakers()
+        elif string == 'relativized':
+            self.encodeRelativizedMeasures()
+        elif string == 'acoustics':
+            self.analyzeAcoustics()
     def enrichLexicon(self):
         dialog = EnrichLexiconDialog(self.corpusConfig, self)
         if dialog.exec_() == QtWidgets.QDialog.Accepted:
@@ -605,11 +489,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
             kwargs = ({'config': self.corpusConfig,
                         'measure': measure})    
+
             self.relativizedMeasuresWorker.setParams(kwargs)
             self.progressWidget.createProgressBar('relativized', self.relativizedMeasuresWorker)
             self.progressWidget.show()
             self.relativizedMeasuresWorker.start()
-        
 
     def getEnrichHelp(self):
         self.enrichHelpBroadcast.emit()
@@ -655,11 +539,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.updateStatus()
 
     def encodeStress(self):
-       
+
         dialog = EncodeStressDialog(self.corpusConfig, self)
         if dialog.exec_() == QtWidgets.QDialog.Accepted:
             kwargs = {'config': self.corpusConfig, 'type':dialog.value()[0], 'regex':dialog.value()[1], 'full_regex':dialog.value()[2]}
-            
+
 
             self.encodeStressWorker.setParams(kwargs)
             self.progressWidget.createProgressBar('stress', self.encodeStressWorker)

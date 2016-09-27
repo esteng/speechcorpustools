@@ -3,6 +3,8 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 
 from polyglotdb import CorpusContext
 
+from .base import BaseSummaryWidget
+
 class PhoneSubsetSelectWidget(QtWidgets.QWidget):
     def __init__(self, config, parent = None):
         super(PhoneSubsetSelectWidget, self).__init__(parent)
@@ -38,7 +40,7 @@ class PhoneSelectWidget(QtWidgets.QWidget):
             phones = []
             for item in res:
                 phones.append(item['label'])
-            phones = sorted(phones, key = lambda x : x[0])    
+            phones = sorted(phones, key = lambda x : x[0])
             for phone in phones:
                 self.selectWidget.addItem(phone)
             #for p in c.lexicon.phones():
@@ -54,6 +56,9 @@ class PhoneSelectWidget(QtWidgets.QWidget):
         phones = [x.text() for x in self.selectWidget.selectedItems()]
         return phones
 
+class InventoryWidget(BaseSummaryWidget):
+    pass
+
 class RegexPhoneSelectWidget(QtWidgets.QTableWidget):
     def __init__(self, data, x,y):
         QtWidgets.QTableWidget.__init__(self,y,x)
@@ -62,7 +67,7 @@ class RegexPhoneSelectWidget(QtWidgets.QTableWidget):
         self.resizeRowsToContents()
 
     def setdata(self):
-        
+
         headers = [col for col in self.data.keys()]
 
         for i, k in enumerate(self.data.keys()):
@@ -70,7 +75,5 @@ class RegexPhoneSelectWidget(QtWidgets.QTableWidget):
                 item = QtWidgets.QTableWidgetItem(v)
                 self.setItem(j,i,item)
         self.setHorizontalHeaderLabels(headers)
-
-
 
 

@@ -52,40 +52,6 @@ class CollapsibleWidgetPair(QtWidgets.QSplitter):
                 self.uncollapsed_arrow = QtCore.Qt.UpArrow
                 self.collapsed_arrow = QtCore.Qt.DownArrow
 
-        #size_unit = get_system_font_height()
-        #handle = self.handle(1)
-        #self.button = QtWidgets.QToolButton(handle)
-        #if self.orientation() == QtCore.Qt.Horizontal:
-        #    self.button.setMinimumHeight(8 * size_unit)
-        #    layout = QtWidgets.QVBoxLayout()
-        #    self.button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        #else:
-        #    self.button.setMinimumWidth(8 * size_unit)
-        #    layout = QtWidgets.QHBoxLayout()
-        #    self.button.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
-
-        #self.button.setArrowType(self.uncollapsed_arrow)
-        #layout.setContentsMargins(0, 0, 0, 0)
-        #self.button.clicked.connect(self.onCollapse)
-        #layout.addWidget(self.button)
-        #handle.setLayout(layout)
-        #self.setHandleWidth(size_unit)
-
-    #def onCollapse(self):
-    #    if self.collapsible == 1:
-    #        collapsed_size = [1, 0]
-    #        uncollapsed_size = [1000,1]
-    #    else:
-    #        collapsed_size = [0, 1]
-    #        uncollapsed_size = [1, 1000]
-    #    if self.sizes()[self.collapsible]:
-    #        self.setSizes(collapsed_size)
-    #        self.button.setArrowType(self.collapsed_arrow)
-    #    else:
-    #        self.setSizes(uncollapsed_size)
-    #        self.button.setArrowType(self.uncollapsed_arrow)
-
-
 class DataListWidget(QtWidgets.QListWidget):
     def __init__(self, plot, plot_type, parent = None):
         super(DataListWidget, self).__init__(parent)
@@ -201,3 +167,15 @@ class CollapsibleTabWidget(QtWidgets.QTabWidget):
                 self.widget(i).setSizePolicy(QtWidgets.QSizePolicy.Ignored,QtWidgets.QSizePolicy.Ignored)
             #self.adjustSize()
             self.needsShrinking.emit()
+
+class BaseSummaryWidget(QtWidgets.QWidget):
+    def __init__(self, parent = None):
+        super(BaseSummaryWidget, self).__init__(parent)
+        self.config = None
+
+    def refresh(self):
+        raise(NotImplementedError)
+
+    def updateConfig(self, config):
+        self.config = config
+        self.refresh()

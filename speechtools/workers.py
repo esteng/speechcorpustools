@@ -101,7 +101,7 @@ class QueryWorker(FunctionWorker):
             return
         print('finished')
         self.dataReady.emit(results)
-        
+
         self.finished = True
         
     def run_query(self):
@@ -119,6 +119,7 @@ class QueryWorker(FunctionWorker):
             results = query.all()
             if results is not None:
                 print(len(results))
+
         self.actionCompleted.emit('query')
         return query, results
 
@@ -179,7 +180,7 @@ class ExportQueryWorker(QueryWorker):
                 results = query.to_csv(export_path)
             except PermissionError:
                 raise(PGError('The file you specified could not be written to. Please ensure you have proper permissions and programs that lock the file (i.e., Excel) do not have it open.'))
-            self.actionCompleted.emit('exporting') 
+            self.actionCompleted.emit('exporting')
         return True
 
 class DiscourseQueryWorker(QueryWorker):
@@ -217,7 +218,8 @@ class AcousticAnalysisWorker(QueryWorker):
                             stop_check = self.kwargs['stop_check'],
                             call_back = self.kwargs['call_back'],
                             acoustics = acoustics)
-            self.actionCompleted.emit('analysing acousics')         
+
+            self.actionCompleted.emit('analysing acoustics')
         return True
 
 class PauseEncodingWorker(QueryWorker):
@@ -230,7 +232,8 @@ class PauseEncodingWorker(QueryWorker):
             c.encode_pauses(pause_words,
                             stop_check = stop_check,
                             call_back = call_back)
-            self.actionCompleted.emit('encoding pauses') 
+
+            self.actionCompleted.emit('encoding pauses')
             if stop_check():
                 call_back('Resetting pauses...')
                 call_back(0, 0)
@@ -267,6 +270,7 @@ class SpeechRateWorker(QueryWorker):
             c.encode_speech_rate(to_count, stop_check = stop_check,
                             call_back = call_back)
             self.actionCompleted.emit('encoding speech rate') 
+
             if stop_check():
                 call_back('Resetting speech rate...')
                 call_back(0, 0)
@@ -282,7 +286,7 @@ class UtterancePositionWorker(QueryWorker):
         with CorpusContext(config) as c:
             c.encode_utterance_position(stop_check = stop_check,
                             call_back = call_back)
-            self.actionCompleted.emit('encoding utterance position')            
+            self.actionCompleted.emit('encoding utterance position')
             if stop_check():
                 call_back('Resetting utterance positions...')
                 call_back(0, 0)
@@ -365,7 +369,6 @@ class LexiconEnrichmentWorker(QueryWorker):
                 call_back('Resetting lexicon...')
                 call_back(0, 0)
                 c.reset_lexicon()
-                
                 return False
         return True
 
@@ -399,7 +402,6 @@ class SpeakerEnrichmentWorker(QueryWorker):
         with CorpusContext(config) as c:
             enrich_speakers_from_csv(c, path)
             self.actionCompleted.emit('enriching speakers')
-            
         return True
 
 class HierarchicalPropertiesWorker(QueryWorker):
@@ -440,9 +442,6 @@ class RelativizedMeasuresWorker(QueryWorker):
             if stop_check():
                 return False
         return True
-
-
-
 
 class PrecedingCacheWorker(QueryWorker):
     def run_query(self):
@@ -513,7 +512,7 @@ class AudioCacheWorker(QueryWorker):
 
 class StressEncodingWorker(QueryWorker):
     def run_query(self):
-       
+
         config = self.kwargs['config']
         encode_type = self.kwargs['type']
         regex = self.kwargs['regex']
@@ -523,5 +522,5 @@ class StressEncodingWorker(QueryWorker):
         call_back(0, 0)
         with CorpusContext(config) as c:
             c.encode_stresstone_to_syllables(encode_type, regex)
-        self.actionCompleted.emit('encoding stress/tone')  
+        self.actionCompleted.emit('encoding stress/tone')
         return True

@@ -7,7 +7,13 @@ from ..plot import SCTSummaryWidget
 
 from ..workers import (DiscourseQueryWorker)
 
-from .base import DataListWidget, CollapsibleWidgetPair, DetailedMessageBox, CollapsibleTabWidget
+from .base import DataListWidget, DetailedMessageBox, CollapsibleTabWidget
+
+from .enrich import EnrichmentSummaryWidget, ExtraEnrichmentWidget, AnnotationSummaryWidget
+
+from .inventory import InventoryWidget
+
+from .lexicon import LexiconWidget
 
 from .selectable_audio import SelectableAudioWidget
 
@@ -53,36 +59,42 @@ class DiscourseWidget(QtWidgets.QWidget):
             self.discourseList.clear()
 
 class ViewWidget(CollapsibleTabWidget):
-    
+
     changingDiscourse = QtCore.pyqtSignal()
     connectionIssues = QtCore.pyqtSignal()
     def __init__(self, parent = None):
         super(ViewWidget, self).__init__(parent)
-   
+
         self.discourseWidget = SelectableAudioWidget()
 
-        self.summaryWidget = SCTSummaryWidget(self)
+        self.summaryWidget = EnrichmentSummaryWidget()
 
-        self.dataTabs = QtWidgets.QTabWidget()
+        self.extraWidget = ExtraEnrichmentWidget()
 
-        self.phoneList = DataListWidget(self.summaryWidget, 'p')
-        self.phoneList.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.comboWidget = QtWidgets.QWidget()
 
-        self.wordList = DataListWidget(self.summaryWidget, 'w')
-        self.wordList.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.annSummaryWidget = AnnotationSummaryWidget()
 
-        self.dataTabs.addTab(self.phoneList, 'Phones')
-        self.dataTabs.addTab(self.wordList, 'Words')
+        self.comboLayout = QtWidgets.QGridLayout()
+        self.comboLayout.addWidget(self.summaryWidget, 0, 0)
+        self.comboLayout.addWidget(self.extraWidget, 0, 1)
+        self.comboWidget.setLayout(self.comboLayout)
 
-        summaryTab = CollapsibleWidgetPair(QtCore.Qt.Horizontal, self.summaryWidget.native, self.dataTabs)
-
-        self.addTab(self.discourseWidget, 'Discourse')
-        #self.addTab(summaryTab, 'Summary')
-
+        self.lexiconWidget = LexiconWidget()
+        self.inventoryWidget = InventoryWidget()
+        self.addTab(self.comboWidget, 'Enrichment')
+        
+        #self.addTab(self.lexiconWidget, 'Corpus lexicon')
+        #self.addTab(self.inventoryWidget, 'Corpus inventory')
+        self.addTab(self.annSummaryWidget, 'Corpus Summary')
+        self.addTab(self.discourseWidget, 'View discourse')
+        
         self.worker = DiscourseQueryWorker()
         self.worker.dataReady.connect(self.discourseWidget.updateDiscourseModel)
         self.changingDiscourse.connect(self.worker.stop)
         self.changingDiscourse.connect(self.discourseWidget.clearDiscourse)
+        self.changingDiscourse.connect(self.summaryWidget.resetPercent)
+        #self.changingDiscourse.connect(self.extraWidget.init_buttons)
         self.worker.errorEncountered.connect(self.showError)
         self.worker.connectionIssues.connect(self.connectionIssues.emit)
 
@@ -112,10 +124,12 @@ class ViewWidget(CollapsibleTabWidget):
         self.config = config
         self.changingDiscourse.emit()
         self.discourseWidget.config = config
+        self.summaryWidget.updateConfig(self.config)
+        self.extraWidget.updateConfig(self.config)
+        self.annSummaryWidget.updateConfig(self.config)
         if self.config is None:
             return
         if self.config.corpus_name:
             with CorpusContext(self.config) as c:
                 if c.hierarchy != self.discourseWidget.hierarchy:
                     self.discourseWidget.updateHierachy(c.hierarchy)
-
