@@ -437,6 +437,7 @@ class RelativizedMeasuresWorker(QueryWorker):
         call_back(0, 0)
         with CorpusContext(config) as c:
             string = "!"
+            print("self.kwars['measure'] = ",self.kwargs['measure'])
             c.encode_measure(self.kwargs['measure'])
             self.actionCompleted.emit('encoding '+ self.kwargs['measure'].replace('_',' '))
             if stop_check():

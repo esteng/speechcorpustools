@@ -409,7 +409,6 @@ class EncodeLabel(QtWidgets.QWidget):
                         or c.hierarchy.has_token_property(self.annotation_type,'begin'): 
                     self.enrichButton.setStyleSheet('background-color: rgb(0,250,154)') 
                     self.enrichButton.setText(self.enrichButton.text().replace('Encode', 'Re-encode').replace('Analyze', 'Re-analyze'))
-         
                 pitch = False
                 if self.annotation_type == 'acoustics' and pitch:
                     self.enrichButton.setStyleSheet('background-color: rgb(0,250,154)') 
@@ -419,7 +418,7 @@ class EncodeLabel(QtWidgets.QWidget):
                             self.resetFeatures()
                 if self.annotation_type not in [c.phone_name, c.word_name]:
                     if self.annotation_type == 'stress/tone' and \
-                            not c.hierarchy.has_token_subset('syllable','begin'):
+                            not c.hierarchy.has_type_property('syllable','label'):
                             self.resetFeatures()
                     if self.annotation_type == 'utterance' and \
                             not c.hierarchy.has_token_subset(c.word_name, 'pause'):
@@ -593,6 +592,7 @@ class ExtraEnrichmentWidget(BaseSummaryWidget):
         syllab = QtWidgets.QLabel()
         syllab.setText('Syllabic properties:')
         stress = EnrichmentWidget('stress/tone')
+        print(self.config, " is config")
         stress.toEncode.connect(self.toEncode.emit) 
 
         self.mainLayout.addWidget(syllab, 5, 0, QtCore.Qt.AlignCenter)
