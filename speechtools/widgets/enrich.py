@@ -404,9 +404,13 @@ class EncodeLabel(QtWidgets.QWidget):
                     word = getattr(c, c.word_name)
                 except:
                     word = False
-                if c.hierarchy.has_token_subset(c.word_name, self.annotation_type.replace('non-speech element', 'pause')) \
-                        or c.hierarchy.has_type_subset(c.phone_name, self.annotation_type) \
-                        or c.hierarchy.has_token_property(self.annotation_type,'begin'): 
+                if c.hierarchy.has_token_subset(c.word_name, self.annotation_type.replace('non-speech element', 'pause')):
+                    self.enrichButton.setStyleSheet('background-color: rgb(0,250,154)') 
+                    self.enrichButton.setText(self.enrichButton.text().replace('Encode', 'Re-encode').replace('Analyze', 'Re-analyze'))
+                if c.hierarchy.has_type_subset(c.phone_name, self.annotation_type):
+                    self.enrichButton.setStyleSheet('background-color: rgb(0,250,154)') 
+                    self.enrichButton.setText(self.enrichButton.text().replace('Encode', 'Re-encode').replace('Analyze', 'Re-analyze'))
+                if c.hierarchy.has_token_property(self.annotation_type,'begin'): 
                     self.enrichButton.setStyleSheet('background-color: rgb(0,250,154)') 
                     self.enrichButton.setText(self.enrichButton.text().replace('Encode', 'Re-encode').replace('Analyze', 'Re-analyze'))
                 pitch = False
