@@ -845,10 +845,10 @@ class EncodeRelativizedMeasuresDialog(BaseDialog):
         layout.addWidget(self.optionWidget)
 
         self.radioWidget = RadioSelectWidget('Desired measure:', OrderedDict([
-            ('Word Mean Duration', 'word_mean_duration'),
-            ('Word Median Duration', 'word_median'),
-            ('Word Standard Deviation','word_std_dev'),
-            ('Baseline Duration', 'baseline_duration_word')]))
+            ('Word Mean Duration', ('duration','mean','word')),
+            ('Word Median Duration', ('duration','median','word')),
+            ('Word Standard Deviation', ('duration','stdev','word')),
+            ('Baseline Duration', ('duration','baseline','word'))]))
         layout.addWidget(self.radioWidget)
 
         self.layout().insertLayout(0, layout)
@@ -861,22 +861,25 @@ class EncodeRelativizedMeasuresDialog(BaseDialog):
                 ('Baseline Duration','baseline_duration_utterance')]))
         if text == 'Word':
             self.radioWidget = RadioSelectWidget('Desired measure:', OrderedDict([
-            ('Word Mean Duration', 'word_mean_duration'),
-            ('Word Median Duration', 'word_median'),
-            ('Word Standard Deviation','word_std_dev'),
-            ('Baseline Duration', 'baseline_duration_word')]))
+                ('Word Mean Duration', ('duration','mean','word')),
+                ('Word Median Duration', ('duration','median','word')),
+                ('Word Standard Deviation', ('duration','stdev','word')),
+                ('Baseline Duration', ('duration','baseline','word'))]))
 
         if text == 'Phone':
-            self.radioWidget = RadioSelectWidget('Desired measure:', OrderedDict([('Phone Mean Duration','phone_mean'),
-            ('Phone Median Duration','phone_median'),
-            ('Phone Standard Deviation', 'phone_std_dev')]))
+            self.radioWidget = RadioSelectWidget('Desired measure:', OrderedDict([
+                ('Phone Mean Duration',('duration','mean','phone')),
+                ('Phone Median Duration',('duration','median','phone')),
+                ('Phone Standard Deviation', ('duration','stdev','phone'))]))
         if text == "Syllable":
-            self.radioWidget = RadioSelectWidget('Desired measure:', OrderedDict([('Syllable Mean Duration', 'syllable_mean'),
-            ('Syllable Median Duration', 'syllable_median'),
-            ('Syllable Standard Deviation', 'syllable_std_dev'),
-            ('Baseline Duration', 'baseline_duration_syllable')]))
+            self.radioWidget = RadioSelectWidget('Desired measure:', OrderedDict([
+                ('Syllable Mean Duration', ('duration','mean','syllable')),
+                ('Syllable Median Duration', ('duration','median','syllable')),
+                ('Syllable Standard Deviation', ('duration','stdev','syllable')),
+                ('Baseline Duration', ('duration','baseline','syllable'))]))
         if text == "Speaker":
-            self.radioWidget = RadioSelectWidget('Desired measure:', OrderedDict([('Mean Speech Rate', 'mean_speech_rate')]))
+            self.radioWidget = RadioSelectWidget('Desired measure:', OrderedDict([
+                ('Mean Speech Rate', ('speech_rate','mean','speaker', True))]))
         self.optionWidget.setParent(None)
         layout.addWidget(self.optionWidget)
         layout.addWidget(self.radioWidget)
